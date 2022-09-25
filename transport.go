@@ -23,7 +23,6 @@ func (t *Transport) RoundTrip(req *http.Request) (res *http.Response, err error)
 
 	conn := try.To1(
 		t.NewConn())
-	defer conn.Close()
 
 	try.To(
 		req.Write(conn))
