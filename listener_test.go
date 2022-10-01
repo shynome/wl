@@ -3,6 +3,7 @@ package wl
 import (
 	"fmt"
 	"io"
+	"math"
 	"net"
 	"net/http"
 	"testing"
@@ -34,7 +35,13 @@ func TestListener(t *testing.T) {
 	resp := try.To1(client.Get("http://wl.com/hello"))
 	b := try.To1(io.ReadAll(resp.Body))
 	t.Log(b)
+
+	resp2 := try.To1(client.Get("http://wl.com/big-file"))
+	bigFile := try.To1(io.ReadAll(resp2.Body))
+	t.Log(bigFile)
 }
+
+var bigFile = make([]byte, math.MaxUint16*16)
 
 func httpServer(pc *webrtc.PeerConnection) {
 	l := Listen()
@@ -42,6 +49,9 @@ func httpServer(pc *webrtc.PeerConnection) {
 	server := &http.ServeMux{}
 	server.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, "world")
+	})
+	server.HandleFunc("/big-file", func(w http.ResponseWriter, r *http.Request) {
+		w.Write(bigFile)
 	})
 	http.Serve(l, server)
 }
