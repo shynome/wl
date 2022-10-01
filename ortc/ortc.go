@@ -1,6 +1,9 @@
 package ortc
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/lainio/err2"
 	"github.com/lainio/err2/try"
 	"github.com/pion/webrtc/v3"
@@ -73,21 +76,33 @@ func Handshake(pc *webrtc.PeerConnection, offer Signal) (err error) {
 func Wait(dc *webrtc.DataChannel) (err error) {
 	defer err2.Return(&err)
 
+	switch dc.ReadyState() {
+	case webrtc.DataChannelStateOpen:
+		return
+	case webrtc.DataChannelStateClosing:
+		fallthrough
+	case webrtc.DataChannelStateClosed:
+		err = fmt.Errorf("dc closed")
+		return
+	case webrtc.DataChannelStateConnecting:
+		break
+	}
+
 	var (
-		wait  = make(chan struct{})
-		errCh = make(chan error)
+		wait = make(chan struct{})
 	)
 
 	dc.OnOpen(func() {
 		close(wait)
 	})
-	dc.OnError(func(err error) {
-		errCh <- err
-	})
+	// dc.OnError(func(err error) {
+	// 	errCh <- err
+	// })
 
 	select {
 	case <-wait:
-	case err = <-errCh:
+	case <-time.After(10 * time.Second):
+		err = fmt.Errorf("wait dc timeout")
 	}
 
 	return
