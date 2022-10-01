@@ -72,5 +72,5 @@ func (l *Listener) closePeers() {
 }
 
 func (l *Listener) Addr() net.Addr {
-	return &net.TCPAddr{}
+	return &Addr{}
 }
