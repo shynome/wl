@@ -2,66 +2,76 @@ package wl
 
 import (
 	"bufio"
+	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"sync"
 
 	"github.com/lainio/err2"
 	"github.com/lainio/err2/try"
-	"github.com/pion/datachannel"
-	"github.com/pion/webrtc/v3"
+	"github.com/xtaci/smux"
 )
 
+type sessionMap struct {
+	mu    *sync.RWMutex
+	value map[string]*smux.Session
+}
+
 type Transport struct {
-	PC *webrtc.PeerConnection
+	sessions *sessionMap
 }
 
 var _ http.RoundTripper = &Transport{}
+
+func NewTransport() (t *Transport) {
+	t = &Transport{
+		sessions: &sessionMap{
+			mu:    &sync.RWMutex{},
+			value: map[string]*smux.Session{},
+		},
+	}
+	return
+}
 
 func (t *Transport) RoundTrip(req *http.Request) (res *http.Response, err error) {
 	defer closeBody(req.Body)
 	defer err2.Return(&err)
 
-	conn := try.To1(
-		t.NewConn())
-
-	try.To(
-		req.Write(conn))
-
-	res = try.To1(
-		http.ReadResponse(bufio.NewReader(conn), req))
+	conn := try.To1(t.NewConn(req.Host))
+	try.To(req.Write(conn))
+	res = try.To1(http.ReadResponse(bufio.NewReader(conn), req))
 
 	return
 }
 
-func (t *Transport) NewConn() (conn io.ReadWriteCloser, err error) {
+func (t *Transport) NewConn(addr string) (conn net.Conn, err error) {
 	defer err2.Return(&err)
-
-	var (
-		resultCh = make(chan datachannel.ReadWriteCloser)
-		errCh    = make(chan error)
-	)
-
-	dc := try.To1(
-		t.PC.CreateDataChannel("", nil))
-
-	dc.OnOpen(func() {
-		conn, err := dc.Detach()
-		if err != nil {
-			errCh <- err
-			return
-		}
-		resultCh <- conn
-	})
-	dc.OnError(func(err error) {
-		errCh <- err
-	})
-
-	select {
-	case conn = <-resultCh:
-	case err = <-errCh:
+	session := try.To1(t.Get(addr))
+	conn, ok := try.To1(session.Open()).(net.Conn)
+	if !ok {
+		err = fmt.Errorf("")
+		return
 	}
-
 	return
+}
+
+var ErrSessionNotExists = fmt.Errorf("session is not exists")
+
+func (t *Transport) Get(addr string) (session *smux.Session, err error) {
+	t.sessions.mu.RLock()
+	defer t.sessions.mu.RUnlock()
+	session, ok := t.sessions.value[addr]
+	if !ok || session == nil {
+		err = fmt.Errorf("%w", ErrSessionNotExists)
+	}
+	return
+}
+
+func (t *Transport) Set(addr string, session *smux.Session) {
+	t.sessions.mu.Lock()
+	defer t.sessions.mu.Unlock()
+	t.sessions.value[addr] = session
 }
 
 func closeBody(body io.ReadCloser) {

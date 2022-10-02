@@ -4,12 +4,13 @@ go 1.19
 
 require (
 	github.com/lainio/err2 v0.8.8
-	github.com/pion/datachannel v1.5.2
 	github.com/pion/webrtc/v3 v3.1.44
+	github.com/xtaci/smux v1.5.16
 )
 
 require (
 	github.com/google/uuid v1.3.0 // indirect
+	github.com/pion/datachannel v1.5.2 // indirect
 	github.com/pion/dtls/v2 v2.1.5 // indirect
 	github.com/pion/ice/v2 v2.2.7 // indirect
 	github.com/pion/interceptor v0.1.12 // indirect

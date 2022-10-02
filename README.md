@@ -5,3 +5,7 @@
 # 如何使用
 
 用法请参考 [./transport_test.go](./transport_test.go)
+
+# Todo
+
+- [ ] `Addr` 实现
