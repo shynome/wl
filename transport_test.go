@@ -49,3 +49,51 @@ func testClient(t *testing.T, client *http.Client) {
 		t.Error(b)
 	}
 }
+
+func BenchmarkTranposrt(b *testing.B) {
+	pc1, pc2 := try.To2(getConnectedPeerConnectionPair())
+	go httpServer(pc2)
+
+	session := try.To1(NewClientSession(pc1))
+
+	tt := NewTransport()
+	tt.Set("wl.com", session)
+
+	client := &http.Client{
+		Transport: tt,
+	}
+
+	for i := 0; i < b.N; i++ {
+		resp := try.To1(client.Get("http://wl.com/hello"))
+		respBytes := try.To1(io.ReadAll(resp.Body))
+		if !bytes.Equal(respBytes, helloResp) {
+			b.Error(respBytes)
+		}
+	}
+}
+
+func BenchmarkHttpTranposrt(b *testing.B) {
+	pc1, pc2 := try.To2(getConnectedPeerConnectionPair())
+	go httpServer(pc2)
+
+	session := try.To1(NewClientSession(pc1))
+
+	tt := NewTransport()
+	tt.Set("wl.com:80", session)
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			Dial: func(network, addr string) (net.Conn, error) {
+				return tt.NewConn(addr)
+			},
+		},
+	}
+
+	for i := 0; i < b.N; i++ {
+		resp := try.To1(client.Get("http://wl.com/hello"))
+		respBytes := try.To1(io.ReadAll(resp.Body))
+		if !bytes.Equal(respBytes, helloResp) {
+			b.Error(respBytes)
+		}
+	}
+}
