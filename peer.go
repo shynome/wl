@@ -11,7 +11,9 @@ import (
 )
 
 type Peer struct {
-	PC      *webrtc.PeerConnection
+	PC *webrtc.PeerConnection
+	ID string
+
 	Session *smux.Session
 }
 
@@ -56,5 +58,14 @@ func (p *Peer) Close() (err error) {
 	try.To(p.PC.Close())
 	try.To(p.Session.Close())
 
+	return
+}
+
+func (p *Peer) Key() (k string) {
+	k = p.ID
+	if k != "" {
+		return
+	}
+	k = p.PC.RemoteDescription().SDP
 	return
 }

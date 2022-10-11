@@ -50,8 +50,20 @@ func (l *Listener) Add(peer *Peer) (err error) {
 	l.peers.lock.Lock()
 	defer l.peers.lock.Unlock()
 
-	k := peer.PC.RemoteDescription().SDP
+	k := peer.Key()
 	l.peers.value[k] = peer
+
+	return
+}
+
+func (l *Listener) Remove(peer *Peer) (err error) {
+	defer err2.Return(&err)
+
+	l.peers.lock.Lock()
+	defer l.peers.lock.Unlock()
+
+	k := peer.Key()
+	delete(l.peers.value, k)
 
 	return
 }
