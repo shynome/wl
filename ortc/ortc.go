@@ -12,7 +12,7 @@ import (
 type Signal webrtc.SessionDescription
 
 func CreateOffer(pc *webrtc.PeerConnection) (sdp Signal, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	try.To(
 		makeOfferWithCandidates(pc))
@@ -28,7 +28,7 @@ func CreateOffer(pc *webrtc.PeerConnection) (sdp Signal, err error) {
 }
 
 func makeOfferWithCandidates(pc *webrtc.PeerConnection) (err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	dc := try.To1(
 		pc.CreateDataChannel("_for_collect_candidates", nil))
@@ -44,7 +44,7 @@ func makeOfferWithCandidates(pc *webrtc.PeerConnection) (err error) {
 }
 
 func HandleConnect(pc *webrtc.PeerConnection, offer Signal) (roffer Signal, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	try.To(
 		pc.SetRemoteDescription(webrtc.SessionDescription(offer)))
@@ -65,7 +65,7 @@ func HandleConnect(pc *webrtc.PeerConnection, offer Signal) (roffer Signal, err 
 }
 
 func Handshake(pc *webrtc.PeerConnection, offer Signal) (err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	try.To(
 		pc.SetRemoteDescription(webrtc.SessionDescription(offer)))
@@ -74,7 +74,7 @@ func Handshake(pc *webrtc.PeerConnection, offer Signal) (err error) {
 }
 
 func Wait(dc *webrtc.DataChannel) (err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	switch dc.ReadyState() {
 	case webrtc.DataChannelStateOpen:

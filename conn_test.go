@@ -17,7 +17,7 @@ func TestSmuxConn(t *testing.T) {
 	pc2.OnDataChannel(func(dc *webrtc.DataChannel) {
 		dc.OnOpen(func() {
 			var err error
-			defer err2.Return(&err)
+			defer err2.Handle(&err)
 			conn := try.To1(dc.Detach())
 			session := try.To1(smux.Server(NewConn(conn), nil))
 			for {
@@ -39,7 +39,7 @@ func TestSmuxConn(t *testing.T) {
 }
 
 func getConnectedPeerConnectionPair() (pc1 *webrtc.PeerConnection, pc2 *webrtc.PeerConnection, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	settingEngine := webrtc.SettingEngine{}
 	settingEngine.DetachDataChannels()

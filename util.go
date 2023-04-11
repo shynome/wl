@@ -9,7 +9,7 @@ import (
 )
 
 func NewClientSession(pc *webrtc.PeerConnection) (session *smux.Session, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	dc := try.To1(pc.CreateDataChannel(SmuxLabel, nil))
 	ortc.Wait(dc)

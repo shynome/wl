@@ -22,7 +22,7 @@ type Transport struct {
 	sessions *sessionMap
 }
 
-var _ http.RoundTripper = &Transport{}
+var _ http.RoundTripper = (*Transport)(nil)
 
 func NewTransport() (t *Transport) {
 	t = &Transport{
@@ -36,7 +36,7 @@ func NewTransport() (t *Transport) {
 
 func (t *Transport) RoundTrip(req *http.Request) (res *http.Response, err error) {
 	defer closeBody(req.Body)
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	conn := try.To1(t.NewConn(req.Host))
 	try.To(req.Write(conn))
@@ -46,7 +46,7 @@ func (t *Transport) RoundTrip(req *http.Request) (res *http.Response, err error)
 }
 
 func (t *Transport) NewConn(addr string) (conn net.Conn, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 	session := try.To1(t.Get(addr))
 	conn, ok := try.To1(session.Open()).(net.Conn)
 	if !ok {

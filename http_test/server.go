@@ -47,7 +47,7 @@ func main() {
 }
 
 func getConnectedPeerConnectionPair() (pc1 *webrtc.PeerConnection, pc2 *webrtc.PeerConnection, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	settingEngine := webrtc.SettingEngine{}
 	settingEngine.DetachDataChannels()

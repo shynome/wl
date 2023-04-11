@@ -43,7 +43,7 @@ func (l *Listener) Close() error {
 }
 
 func (l *Listener) Add(peer *Peer) (err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	peer.ForwardConns(l.conns)
 
@@ -57,7 +57,7 @@ func (l *Listener) Add(peer *Peer) (err error) {
 }
 
 func (l *Listener) Remove(peer *Peer) (err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	l.peers.lock.Lock()
 	defer l.peers.lock.Unlock()
